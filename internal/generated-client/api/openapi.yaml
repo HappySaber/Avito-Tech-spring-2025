@@ -1,0 +1,521 @@
+openapi: 3.0.0
+info:
+  description: Сервис для управления ПВЗ и приемкой товаров
+  title: backend service
+  version: 1.0.0
+servers:
+- url: /
+paths:
+  /dummyLogin:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_dummyLogin_post_request'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+          description: Успешная авторизация
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Неверный запрос
+      summary: Получение тестового токена
+  /register:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_register_post_request'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: Пользователь создан
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Неверный запрос
+      summary: Регистрация пользователя
+  /login:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_login_post_request'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Token'
+          description: Успешная авторизация
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Неверные учетные данные
+      summary: Авторизация пользователя
+  /pvz:
+    get:
+      parameters:
+      - description: Начальная дата диапазона
+        explode: true
+        in: query
+        name: startDate
+        required: false
+        schema:
+          format: date-time
+          type: string
+        style: form
+      - description: Конечная дата диапазона
+        explode: true
+        in: query
+        name: endDate
+        required: false
+        schema:
+          format: date-time
+          type: string
+        style: form
+      - description: Номер страницы
+        explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          minimum: 1
+          type: integer
+        style: form
+      - description: Количество элементов на странице
+        explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 10
+          maximum: 30
+          minimum: 1
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/_pvz_get_200_response_inner'
+                type: array
+          description: Список ПВЗ
+      security:
+      - bearerAuth: []
+      summary: Получение списка ПВЗ с фильтрацией по дате приемки и пагинацией
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PVZ'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PVZ'
+          description: ПВЗ создан
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Неверный запрос
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Доступ запрещен
+      security:
+      - bearerAuth: []
+      summary: Создание ПВЗ (только для модераторов)
+  /pvz/{pvzId}/close_last_reception:
+    post:
+      parameters:
+      - explode: false
+        in: path
+        name: pvzId
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reception'
+          description: Приемка закрыта
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Неверный запрос или приемка уже закрыта
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Доступ запрещен
+      security:
+      - bearerAuth: []
+      summary: Закрытие последней открытой приемки товаров в рамках ПВЗ
+  /pvz/{pvzId}/delete_last_product:
+    post:
+      parameters:
+      - explode: false
+        in: path
+        name: pvzId
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: Товар удален
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: "Неверный запрос, нет активной приемки или нет товаров для\
+            \ удаления"
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Доступ запрещен
+      security:
+      - bearerAuth: []
+      summary: "Удаление последнего добавленного товара из текущей приемки (LIFO,\
+        \ только для сотрудников ПВЗ)"
+  /receptions:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_receptions_post_request'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reception'
+          description: Приемка создана
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Неверный запрос или есть незакрытая приемка
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Доступ запрещен
+      security:
+      - bearerAuth: []
+      summary: Создание новой приемки товаров (только для сотрудников ПВЗ)
+  /products:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_products_post_request'
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: Товар добавлен
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Неверный запрос или нет активной приемки
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Доступ запрещен
+      security:
+      - bearerAuth: []
+      summary: Добавление товара в текущую приемку (только для сотрудников ПВЗ)
+components:
+  schemas:
+    Token:
+      type: string
+    User:
+      example:
+        role: employee
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        email: email
+      properties:
+        id:
+          format: uuid
+          type: string
+        email:
+          format: email
+          type: string
+        role:
+          enum:
+          - employee
+          - moderator
+          type: string
+      required:
+      - email
+      - role
+      type: object
+    PVZ:
+      example:
+        city: Москва
+        registrationDate: 2000-01-23T04:56:07.000+00:00
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        id:
+          format: uuid
+          type: string
+        registrationDate:
+          format: date-time
+          type: string
+        city:
+          enum:
+          - Москва
+          - Санкт-Петербург
+          - Казань
+          type: string
+      required:
+      - city
+      type: object
+    Reception:
+      example:
+        dateTime: 2000-01-23T04:56:07.000+00:00
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        pvzId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        status: in_progress
+      properties:
+        id:
+          format: uuid
+          type: string
+        dateTime:
+          format: date-time
+          type: string
+        pvzId:
+          format: uuid
+          type: string
+        status:
+          enum:
+          - in_progress
+          - close
+          type: string
+      required:
+      - dateTime
+      - pvzId
+      - status
+      type: object
+    Product:
+      example:
+        dateTime: 2000-01-23T04:56:07.000+00:00
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        type: электроника
+        receptionId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        id:
+          format: uuid
+          type: string
+        dateTime:
+          format: date-time
+          type: string
+        type:
+          enum:
+          - электроника
+          - одежда
+          - обувь
+          type: string
+        receptionId:
+          format: uuid
+          type: string
+      required:
+      - receptionId
+      - type
+      type: object
+    Error:
+      example:
+        message: message
+      properties:
+        message:
+          type: string
+      required:
+      - message
+      type: object
+    _dummyLogin_post_request:
+      properties:
+        role:
+          enum:
+          - employee
+          - moderator
+          type: string
+      required:
+      - role
+      type: object
+    _register_post_request:
+      properties:
+        email:
+          format: email
+          type: string
+        password:
+          type: string
+        role:
+          enum:
+          - employee
+          - moderator
+          type: string
+      required:
+      - email
+      - password
+      - role
+      type: object
+    _login_post_request:
+      properties:
+        email:
+          format: email
+          type: string
+        password:
+          type: string
+      required:
+      - email
+      - password
+      type: object
+    _pvz_get_200_response_inner_receptions_inner:
+      example:
+        reception:
+          dateTime: 2000-01-23T04:56:07.000+00:00
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          pvzId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          status: in_progress
+        products:
+        - dateTime: 2000-01-23T04:56:07.000+00:00
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          type: электроника
+          receptionId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - dateTime: 2000-01-23T04:56:07.000+00:00
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          type: электроника
+          receptionId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        reception:
+          $ref: '#/components/schemas/Reception'
+        products:
+          items:
+            $ref: '#/components/schemas/Product'
+          type: array
+      type: object
+    _pvz_get_200_response_inner:
+      example:
+        receptions:
+        - reception:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            pvzId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            status: in_progress
+          products:
+          - dateTime: 2000-01-23T04:56:07.000+00:00
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            type: электроника
+            receptionId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          - dateTime: 2000-01-23T04:56:07.000+00:00
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            type: электроника
+            receptionId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - reception:
+            dateTime: 2000-01-23T04:56:07.000+00:00
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            pvzId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            status: in_progress
+          products:
+          - dateTime: 2000-01-23T04:56:07.000+00:00
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            type: электроника
+            receptionId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          - dateTime: 2000-01-23T04:56:07.000+00:00
+            id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+            type: электроника
+            receptionId: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        pvz:
+          city: Москва
+          registrationDate: 2000-01-23T04:56:07.000+00:00
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        pvz:
+          $ref: '#/components/schemas/PVZ'
+        receptions:
+          items:
+            $ref: '#/components/schemas/_pvz_get_200_response_inner_receptions_inner'
+          type: array
+      type: object
+    _receptions_post_request:
+      properties:
+        pvzId:
+          format: uuid
+          type: string
+      required:
+      - pvzId
+      type: object
+    _products_post_request:
+      properties:
+        type:
+          enum:
+          - электроника
+          - одежда
+          - обувь
+          type: string
+        pvzId:
+          format: uuid
+          type: string
+      required:
+      - pvzId
+      - type
+      type: object
+  securitySchemes:
+    bearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
