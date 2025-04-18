@@ -9,7 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtKey = []byte("sosal?da!")
+var jwtKey = []byte("jwtSecret")
 
 func DummyLogin(c *gin.Context) {
 	var user models.User
@@ -54,6 +54,7 @@ func DummyLogin(c *gin.Context) {
 }
 
 func Login(c *gin.Context) {
+
 }
 
 func Signup(c *gin.Context) {
@@ -65,4 +66,5 @@ func Home(c *gin.Context) {
 }
 
 func Logout(c *gin.Context) {
+
 }
