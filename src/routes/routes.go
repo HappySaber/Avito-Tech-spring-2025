@@ -8,4 +8,6 @@ import (
 
 func PVZRoutes(r *gin.Engine) {
 	r.POST("/dummyLogin", controllers.DummyLogin)
+	r.POST("/login", controllers.Login)
+	r.POST("/register", controllers.Signup)
 }
