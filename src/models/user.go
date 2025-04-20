@@ -4,11 +4,10 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 )
 
 type User struct {
-	ID        uuid.UUID `json:"id"`
+	ID        string    `json:"id"`
 	Email     string    `json:"email" valid:"email"`
 	Password  string    `json:"password"`
 	Role      string    `json:"Role"`

@@ -14,6 +14,10 @@ func PVZRoutes(r *gin.Engine) {
 
 	userGroup := r.Group("/pvz").Use(midlleware.IsAuthorized())
 	{
-		userGroup.POST("/createpvz", midlleware.IsModerator(), controllers.CreatePVZ)
+		userGroup.POST("/create-pvz", midlleware.IsModerator(), controllers.CreatePVZ)
+		userGroup.POST("/:pvzid/initiate-reception", midlleware.IsPVZemployee(), controllers.InitiateReceivingHandler)
+		userGroup.POST("/:pvzid/add-product", midlleware.IsPVZemployee(), controllers.AddProductHandler)
+		userGroup.DELETE("/:pvzid/delete-last-product", midlleware.IsPVZemployee(), controllers.DeleteLastProduct)
+		userGroup.POST("/:pvzid/close-reception", midlleware.IsPVZemployee(), controllers.CloseReception)
 	}
 }

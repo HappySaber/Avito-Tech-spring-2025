@@ -106,7 +106,7 @@ func Login(c *gin.Context) {
 	claims := &models.Claims{
 		Role: existingUser.Role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   existingUser.ID.String(),
+			Subject:   existingUser.ID,
 			ExpiresAt: &jwt.NumericDate{Time: expirationTime},
 		},
 	}
