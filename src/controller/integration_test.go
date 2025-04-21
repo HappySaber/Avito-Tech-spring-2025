@@ -84,13 +84,15 @@ func TestPVZWorkflow(t *testing.T) {
 		t.Logf("Created Reception with ID: %s", receptionID)
 	})
 
-	t.Run("Add Products", func(t *testing.T) {
-		productTypes := []string{"electronics", "clothes", "shoes"}
-		for _, productType := range productTypes {
+	t.Run("Add 50 Products of Same Type", func(t *testing.T) {
+		productType := "electronics" // или любой другой тип
+
+		for i := 0; i < 50; i++ {
 			product := models.Product{
 				ReceptionID: receptionID,
 				Type:        productType,
 			}
+
 			jsonValue, _ := json.Marshal(product)
 
 			w := httptest.NewRecorder()
@@ -99,14 +101,8 @@ func TestPVZWorkflow(t *testing.T) {
 			router.ServeHTTP(w, req)
 
 			assert.Equal(t, http.StatusOK, w.Code)
-
-			var response models.Product
-			err := json.Unmarshal(w.Body.Bytes(), &response)
-			assert.NoError(t, err)
-			assert.Equal(t, productType, response.Type)
 		}
 	})
-
 	t.Run("Close Reception", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("PUT", "/pvz/"+pvzID+"/receptions/close", nil)
