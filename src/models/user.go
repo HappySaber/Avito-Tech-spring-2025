@@ -24,5 +24,4 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-// var Roles := {}
 var Roles = []string{"client", "moderator", "PVZemployee"}

@@ -2,6 +2,7 @@ package midlleware
 
 import (
 	"PVZ/src/utils"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -45,6 +46,18 @@ func IsPVZemployee() gin.HandlerFunc {
 		role, exists := c.Get("role")
 		if !exists || role != "PVZemployee" {
 			c.JSON(403, gin.H{"error": "Access denied, only PVZemployee can do this"})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
+
+func IsPVZemployeeOrModerator() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userRole, exists := c.Get("role")
+		if !exists || (userRole != "PVZemployee" && userRole != "moderator") {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 			c.Abort()
 			return
 		}

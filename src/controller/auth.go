@@ -6,6 +6,7 @@ import (
 	"PVZ/src/utils"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -15,7 +16,7 @@ import (
 	"github.com/google/uuid"
 )
 
-var jwtKey = []byte("jwtSecret")
+var jwtKey = []byte(os.Getenv("JWTKEY"))
 
 // {
 //     "email":"example@mail.ru",
@@ -101,7 +102,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	expirationTime := time.Now().Add(30 * time.Minute)
+	expirationTime := time.Now().Add(2 * time.Hour)
 
 	claims := &models.Claims{
 		Role: existingUser.Role,
@@ -180,9 +181,9 @@ func Signup(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "could not generate password hash"})
 		return
 	}
-
-	query = "INSERT INTO users (email, password, role, created_at) VALUES ($1, $2, $3, NOW())"
-	if _, err := database.DB.Exec(query, user.Email, user.Password, user.Role); err != nil {
+	user.ID = uuid.New().String()
+	query = "INSERT INTO users (id, email, password, role, created_at) VALUES ($1, $2, $3, $4, NOW())"
+	if _, err := database.DB.Exec(query, user.ID, user.Email, user.Password, user.Role); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -190,10 +191,7 @@ func Signup(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": "user created"})
 }
 
-func Home(c *gin.Context) {
-
-}
-
 func Logout(c *gin.Context) {
-
+	c.SetCookie("token", "", -1, "/", "localhost", false, true)
+	c.JSON(200, gin.H{"success": "user logged out"})
 }

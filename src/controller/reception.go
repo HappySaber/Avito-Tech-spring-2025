@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func InitiateReceivingHandler(c *gin.Context) {
@@ -18,7 +19,6 @@ func InitiateReceivingHandler(c *gin.Context) {
 		return
 	}
 
-	// Проверка на наличие активной приёмки для данного ПВЗ
 	check, err := isReceptionActive(pvzId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -29,7 +29,7 @@ func InitiateReceivingHandler(c *gin.Context) {
 		c.JSON(http.StatusConflict, gin.H{"error": "The previous reception of the products was not closed"})
 		return
 	}
-
+	reception.ID = uuid.New().String()
 	reception.PvzID = pvzId
 	reception.Status = models.Statuses[0]
 
@@ -73,7 +73,7 @@ func saveReception(reception models.Reception) error {
 func CloseReception(c *gin.Context) {
 	pvzId := c.Param("pvzid")
 	var reception models.Reception
-	// Проверка на наличие активной приёмки для данного ПВЗ
+
 	check, err := isReceptionActive(pvzId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

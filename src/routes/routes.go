@@ -19,5 +19,6 @@ func PVZRoutes(r *gin.Engine) {
 		userGroup.POST("/:pvzid/add-product", midlleware.IsPVZemployee(), controllers.AddProductHandler)
 		userGroup.DELETE("/:pvzid/delete-last-product", midlleware.IsPVZemployee(), controllers.DeleteLastProduct)
 		userGroup.POST("/:pvzid/close-reception", midlleware.IsPVZemployee(), controllers.CloseReception)
+		userGroup.GET("/data", midlleware.IsPVZemployeeOrModerator(), controllers.GetPVZDataHandler)
 	}
 }

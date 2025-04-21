@@ -10,4 +10,9 @@ type Pvz struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type PvzWithReceptions struct {
+	Pvz        Pvz             `json:"pvz"`
+	Receptions []ReceptionInfo `json:"receptions"`
+}
+
 var Cities = []string{"Saint-Peterburg", "Moscow", "Kazan"}

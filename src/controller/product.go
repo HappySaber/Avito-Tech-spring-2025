@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func AddProductHandler(c *gin.Context) {
@@ -48,6 +49,7 @@ func AddProductHandler(c *gin.Context) {
 	product.ReceptionID = receptionID
 
 	// Сохранение товара в хранилище данных
+	product.ID = uuid.New().String()
 	if err := saveProduct(product); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error while saving the product: " + err.Error()})
 		return
@@ -98,6 +100,7 @@ func getActiveReceptionIDByPVZ(pvzID string) (string, error) {
 }
 
 func saveProduct(product models.Product) error {
+
 	query := `INSERT INTO products (reception_id, type, created_at) VALUES ($1,$2, NOW())`
 	_, err := database.DB.Exec(query, product.ReceptionID, product.Type)
 	if err != nil {

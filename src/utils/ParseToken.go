@@ -4,6 +4,7 @@ import (
 	"PVZ/src/models"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -13,7 +14,7 @@ func ParseToken(tokenString string) (*models.Claims, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte("jwtSecret"), nil
+		return []byte(os.Getenv("JWTKEY")), nil
 	})
 
 	if err != nil {
